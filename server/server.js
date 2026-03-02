@@ -2,7 +2,7 @@
 // FRONTEND LINK: The React app makes API calls to http://localhost:5000/api/*
 // Update VITE proxy or use CORS to allow frontend requests
 
-require('dotenv').config();
+require('dotenv').config({path:'./.env'}); //the first file genertaes then all things also executes withis this file so we need dotenv mean s0 all environment variable also load as soon as possible with this file and application doesnt have to wait 
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
