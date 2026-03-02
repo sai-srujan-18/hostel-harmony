@@ -7,7 +7,7 @@ import { Printer, IndianRupee } from 'lucide-react';
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-const SEMESTER_PRESET = 21600; // ₹21,600 preset for 6 months (e.g. 30 days × ₹120 × 6)
+const SEMESTER_PRESET = 36500;
 
 const StudentMessBill = ({ bills }: { bills: MessBill[] }) => {
   const [selectedMonth, setSelectedMonth] = useState('1');
