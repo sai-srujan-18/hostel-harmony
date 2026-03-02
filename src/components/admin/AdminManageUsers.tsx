@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getAllUsers, User } from '@/lib/store';
+import { getAllUsers, User, mockAttendance, mockBills } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, ArrowLeft, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+
+const SEMESTER_PRESET = 36500;
 
 type View = 'list' | 'add' | 'detail';
 
@@ -30,12 +32,21 @@ const AdminManageUsers = () => {
   };
 
   if (view === 'detail' && selectedUser) {
+    const totalDeducted = mockBills.reduce((sum, b) => sum + b.totalAmount, 0);
+    const balance = SEMESTER_PRESET - totalDeducted;
+
+    // Get attendance summary
+    const allAttendance = Object.values(mockAttendance).flat();
+    const presentDays = allAttendance.filter(a => a.status === 'present').length;
+    const absentDays = allAttendance.filter(a => a.status === 'absent').length;
+    const leaveDays = allAttendance.filter(a => a.status === 'leave').length;
+
     return (
       <div className="max-w-2xl">
         <button onClick={() => { setView('list'); setSelectedUser(null); }} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to list
         </button>
-        <Card className="shadow-card">
+        <Card className="shadow-card mb-4">
           <CardHeader>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center text-lg font-bold text-primary-foreground">
@@ -55,6 +66,57 @@ const AdminManageUsers = () => {
             {selectedUser.email && <Detail label="Email" value={selectedUser.email} />}
           </CardContent>
         </Card>
+
+        {/* Financial & Attendance Summary (for students) */}
+        {selectedUser.role === 'student' && (
+          <>
+            <Card className="shadow-card mb-4">
+              <CardHeader>
+                <CardTitle className="text-base">Financial Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Semester Preset</p>
+                    <p className="text-lg font-bold text-foreground">₹{SEMESTER_PRESET.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Total Deducted</p>
+                    <p className="text-lg font-bold text-foreground">₹{totalDeducted.toLocaleString()}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Balance</p>
+                    <p className={`text-lg font-bold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      ₹{balance.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-base">Attendance Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 rounded-lg bg-success/10">
+                    <p className="text-xs text-muted-foreground">Present</p>
+                    <p className="text-lg font-bold text-success">{presentDays}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-destructive/10">
+                    <p className="text-xs text-muted-foreground">Absent</p>
+                    <p className="text-lg font-bold text-destructive">{absentDays}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-leave/10">
+                    <p className="text-xs text-muted-foreground">Leave</p>
+                    <p className="text-lg font-bold text-leave">{leaveDays}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     );
   }
@@ -125,7 +187,7 @@ const AdminManageUsers = () => {
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search by name, roll number, or role..."
+          placeholder="Search by roll number, name, or role..."
           className="pl-10"
           value={search}
           onChange={e => setSearch(e.target.value)}
